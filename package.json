@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "create-pwa": "^2.3.1"
+  },
+  "scripts": {
+    "pwa": "create-pwa --icon=\"icon.png\" --launch=\"icon.png\""
+  }
+}
