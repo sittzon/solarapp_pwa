@@ -1,14 +1,16 @@
 extends header
 
 block content
-  div(class="h-100 bg-dark text-light container-fluid") 
+  div(class="h-100 text-light container-fluid" style="background:black")
     h1(class="text-center display-4") SolarApp PWA
     div(class="container")
       div(class="col")
         div(class="row")
           div(class="col")
           div(class="col")
-            img(src="https://image.flaticon.com/icons/png/512/25/25076.png" class="rounded mx-auto d-block img-fluid" style="max-width:100%")
-            p(class="text-center") #{powerNow} kW
+            img(src="energia-solar-gif.gif" class="rounded mx-auto d-block img-fluid" style="max-width:100%")
+            p(class="text-center") #{powerNow} #{unit}
           div(class="col")
+        p(class="text-center") lastUpdate: #{lastUpdate}
+
   
