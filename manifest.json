@@ -1,8 +1,8 @@
 {
 	"lang": "en",
 	"dir": "ltr",
-	"name": "SolarApp PWA",
-	"short_name": "SolarAPP",
+	"name": "solarapp_pwa",
+	"short_name": "solarapp_pwa",
 	"description": "",
 	"theme_color": "#000",
 	"background_color": "#000",

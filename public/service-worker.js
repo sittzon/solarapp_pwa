@@ -50,6 +50,7 @@ const urlsToCache = [
 	'favicons/favicon.ico'
 ];
 
+/*
 self.addEventListener('install', event => {
 	self.skipWaiting();
 
@@ -90,6 +91,15 @@ self.addEventListener('fetch', event => {
 	);
 });
 
+self.addEventListener('fetch', function(e) {
+  console.log('[ServiceWorker] Fetch', e.request.url);
+  e.respondWith(
+    caches.match(e.request).then(function(response) {
+      return response || fetch(e.request);
+    })
+  );
+});
+
 self.addEventListener('activate', event => {
 	event.waitUntil(
 		caches
@@ -102,4 +112,39 @@ self.addEventListener('activate', event => {
 				)
 			)
 	);
+});
+*/
+
+self.addEventListener('install', function(e) {
+  console.log('[ServiceWorker] Install');
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(function(cache) {
+      console.log('[ServiceWorker] Caching app shell');
+      return cache.addAll(urlsToCache);
+    })
+  );
+});
+
+self.addEventListener('activate', function(e) {
+  console.log('[ServiceWorker] Activate');
+  e.waitUntil(
+    caches.keys().then(function(keyList) {
+      return Promise.all(keyList.map(function(key) {
+        if (key !== CACHE_NAME) {
+          console.log('[ServiceWorker] Removing old cache', key);
+          return caches.delete(key);
+        }
+      }));
+    })
+  );
+  return self.clients.claim();
+});
+
+self.addEventListener('fetch', function(e) {
+  console.log('[ServiceWorker] Fetch', e.request.url);
+  e.respondWith(
+    caches.match(e.request).then(function(response) {
+      return response || fetch(e.request);
+    })
+  );
 });
