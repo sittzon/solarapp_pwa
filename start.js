@@ -35,6 +35,7 @@ io.on('connection', (socket) => {
       splitString = data.split('\n')
       lastUpdate = splitString[0]
       powerNow = Number(splitString[1])
+      status = Number(splitString[2])
       if (powerNow > 1000){
         //Round with one decimal
         powerNow = powerNow/100
@@ -42,8 +43,9 @@ io.on('connection', (socket) => {
         powerNow = powerNow/10
         unit = "kW"
       }
-      console.log(getDate() + ": Last update on server: " +lastUpdate + "\n");
-      io.emit('updateFromServer', powerNow, unit, lastUpdate);
+      console.log(getDate() + ": Last update on server: " +lastUpdate);
+      console.log("Status: "+status + "\n")
+      io.emit('updateFromServer', powerNow, unit, lastUpdate, status);
     })
   })
 })

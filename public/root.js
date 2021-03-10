@@ -31,15 +31,41 @@ function requestUpdate() {
 	socket.emit('requestUpdate');
 }
 
+function updateTextWithAnimation(elName, newText) {
+	var el = $('#'+elName);
+	el.text(newText);
+	el.addClass('update-bkg');
+
+	var elm = document.getElementById(elName);
+	var newone = elm.cloneNode(true);
+	elm.parentNode.replaceChild(newone, elm);
+}
+
 $(function () {
 	var socket = io();
-	socket.on('updateFromServer', function(powerNow, unit, lastUpdate) {
+	socket.on('updateFromServer', function(powerNow,unit,lastUpdate,status) {
 		console.log(powerNow + " " + unit);
 		console.log(lastUpdate);
+		console.log("Status: "+status);
+
 		var power = document.getElementById("powerNowAndUnit");
-		power.innerHTML = powerNow + " " + unit;
 		var lastUpdateText = document.getElementById("lastUpdate");
-		lastUpdateText.innerHTML = lastUpdate;
+		var statusObj = document.getElementById("status");
+
+    if (status == 0) {
+    	status = "Online";
+			$('#status').removeClass('text-warning');
+			$('#status').addClass('text-success');
+    } else {
+    	status = "Offline"
+    	powerNow = 0;
+			$('#status').removeClass('text-success');
+			$('#status').addClass('text-warning');
+    }
+
+    updateTextWithAnimation("powerNowAndUnit", powerNow+" "+unit);
+    updateTextWithAnimation("lastUpdate", lastUpdate);
+    updateTextWithAnimation("status", status);
 	});
 	socket.on('connect', () => {
 		console.log(getDate() + ": Connected");
@@ -51,4 +77,4 @@ $(function () {
 setInterval(function() {
 	console.log(getDate() + ": Timer fired");
 	requestUpdate()
-}, 60000);
+}, 30000);
