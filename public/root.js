@@ -27,6 +27,7 @@ function getElementsStartsWithId( id ) {
 // socket.io request update from server
 function requestUpdate() {
 	console.log(getDate() + ": Requesting update from server");
+	$('#loadingSpinner').css("visibility", "visible");
 	var socket = io();
 	socket.emit('requestUpdate');
 }
@@ -48,10 +49,6 @@ $(function () {
 		console.log(lastUpdate);
 		console.log("Status: "+status);
 
-		var power = document.getElementById("powerNowAndUnit");
-		var lastUpdateText = document.getElementById("lastUpdate");
-		var statusObj = document.getElementById("status");
-
     if (status == 0) {
     	status = "Online";
 			$('#status').removeClass('text-warning');
@@ -64,8 +61,10 @@ $(function () {
     }
 
     updateTextWithAnimation("powerNowAndUnit", powerNow+" "+unit);
-    updateTextWithAnimation("lastUpdate", lastUpdate);
+    updateTextWithAnimation("lastUpdate", "Latest update: "+lastUpdate);
     updateTextWithAnimation("status", status);
+
+		$('#loadingSpinner').css("visibility", "hidden");
 	});
 	socket.on('connect', () => {
 		console.log(getDate() + ": Connected");

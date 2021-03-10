@@ -2,16 +2,21 @@ extends header
 
 block content
   div(class="h-100 text-light container-fluid" style="background:black")
-    h1(class="text-center display-4") SolarApp
-    div(class="container")
+    h3(class="text-center display-8") Power Flow
+    div(class="d-flex justify-content-center")
+      div(id="loadingSpinner" style="visibility:hidden")
+        div(class="spinner-border ml-auto")
+    div(class="container text-center")
+      p(id="lastUpdate")
       div(class="col")
+        div(class="row")
+
         div(class="row")
           div(class="col")
           div(class="col")
-            img(src="energia-solar-gif.gif" class="rounded mx-auto d-block img-fluid" style="max-width:100%")
-            p(id="powerNowAndUnit" class="text-center")
+            div(class="row")
+              div(class="col")
+                p(id="status")
+            img(src="solar_blue_icon.png" class="rounded-circle border border-warning rounded-sm mx-auto d-block img-fluid")
+            p(id="powerNowAndUnit")
           div(class="col")
-        p(id="lastUpdate" class="text-center")
-        p(id="status" class="text-center")
-
-  
