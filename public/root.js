@@ -11,6 +11,36 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+function generateSolarChart(x, y) {
+	var ctx = document.getElementById('solarChart').getContext('2d');
+	var myChart = new Chart(ctx, {
+	    type: 'line',
+	    data: {
+	        labels: x,
+	        datasets: [{
+	            label: 'W',
+	            data: y,
+	            backgroundColor: [
+	                'rgba(255, 99, 132, 0.2)'
+	            ],
+	            borderColor: [
+	                'rgba(255, 99, 132, 1)'
+	            ],
+	            borderWidth: 1
+	        }]
+	    },
+	    options: {
+	        scales: {
+	            yAxes: [{
+	                ticks: {
+	                    beginAtZero: true
+	                }
+	            }]
+	        }
+	    }
+	});
+}
+
 /*
 function getElementsStartsWithId( id ) {
 	var children = document.body.getElementsByTagName('*');
@@ -66,6 +96,9 @@ $(function () {
 
 		$('#loadingSpinner').css("visibility", "hidden");
 	});
+	socket.on('updateChartFromServer', function(xData, yData) {
+		generateSolarChart(xData, yData);
+	})
 	socket.on('connect', () => {
 		console.log(getDate() + ": Connected");
 		requestUpdate();

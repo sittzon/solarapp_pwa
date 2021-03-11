@@ -2,7 +2,7 @@ extends header
 
 block content
   div(class="h-100 text-light container-fluid" style="background:black")
-    h3(class="text-center display-8") Power Flow
+    h3(class="text-center display-8") Solar App
     div(class="d-flex justify-content-center")
       div(id="loadingSpinner" style="visibility:hidden")
         div(class="spinner-border ml-auto")
@@ -10,7 +10,6 @@ block content
       p(id="lastUpdate")
       div(class="col")
         div(class="row")
-
         div(class="row")
           div(class="col")
           div(class="col")
@@ -20,3 +19,5 @@ block content
             img(src="solar_blue_icon.png" class="rounded-circle border border-warning rounded-sm mx-auto d-block img-fluid")
             p(id="powerNowAndUnit")
           div(class="col")
+
+    canvas(id="solarChart" width="200" height="200")

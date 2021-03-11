@@ -14,6 +14,8 @@ app.use(express.static('public'));
 app.use('/icons', express.static('icons'));
 app.use('/launch-screens', express.static('launch-screens'));
 app.use('/favicons', express.static('favicons'));
+app.use('/body-scroll-lock', express.static('node_modules/body-scroll-lock/lib'));
+app.use('/chartjs', express.static('node_modules/chart.js'));
 
 function getDate() {
   var d = new Date();
@@ -43,9 +45,23 @@ io.on('connection', (socket) => {
         powerNow = powerNow/10
         unit = "kW"
       }
-      console.log(getDate() + ": Last update on server: " +lastUpdate);
-      console.log("Status: "+status + "\n")
+      //console.log(getDate() + ": Last update on server: " +lastUpdate);
+      //console.log("Status: "+status + "\n")
       io.emit('updateFromServer', powerNow, unit, lastUpdate, status);
+    })
+
+    fs.readFile('/Users/Mac/energy_over_day.txt', 'utf8', function (err,data) {
+      if (err) {
+        return console.log(err);
+      }
+      var jsonData = JSON.parse(data);
+      var x = [1000];
+      var y = [1000];
+      for (i = 0; i < jsonData.length; i++) {
+        x[i] = jsonData[i].ts.substring(11).substring(0,5); //Time
+        y[i] = jsonData[i].val*1000; //Power
+      }
+      io.emit('updateChartFromServer', x, y);
     })
   })
 })

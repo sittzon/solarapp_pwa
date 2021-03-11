@@ -6,6 +6,8 @@
     "pwa": "create-pwa --icon=\"icon.png\" --launch=\"icon.png\""
   },
   "dependencies": {
+    "body-scroll-lock": "^3.1.5",
+    "chart.js": "^2.9.4",
     "express": "^4.17.1",
     "open": "^8.0.2",
     "pug": "^3.0.2",
