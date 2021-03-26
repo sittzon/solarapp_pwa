@@ -21,10 +21,10 @@ function generateSolarChart(x, y) {
 	            label: 'W',
 	            data: y,
 	            backgroundColor: [
-	                'rgba(255, 99, 132, 0.2)'
+	                'rgba(255, 255, 0, 0.3)'
 	            ],
 	            borderColor: [
-	                'rgba(255, 99, 132, 1)'
+	                'rgba(255, 255, 0, 1)'
 	            ],
 	            borderWidth: 1
 	        }]
@@ -74,7 +74,7 @@ function updateTextWithAnimation(elName, newText) {
 
 $(function () {
 	var socket = io();
-	socket.on('updateFromServer', function(powerNow,unit,lastUpdate,status) {
+	socket.on('updateFromServer', function(powerNow,unit,lastUpdate,status,temp) {
 		console.log(powerNow + " " + unit);
 		console.log(lastUpdate);
 		console.log("Status: "+status);
@@ -93,9 +93,12 @@ $(function () {
     updateTextWithAnimation("powerNowAndUnit", powerNow+" "+unit);
     updateTextWithAnimation("lastUpdate", "Latest update: "+lastUpdate);
     updateTextWithAnimation("status", status);
-
-		$('#loadingSpinner').css("visibility", "hidden");
 	});
+	socket.on('updateTempFromServer', function(temp) {
+		console.log("Temperature: "+temp);
+		updateTextWithAnimation("temperature", temp);
+		$('#loadingSpinner').css("visibility", "hidden");
+	})
 	socket.on('updateChartFromServer', function(xData, yData) {
 		generateSolarChart(xData, yData);
 	})
@@ -109,4 +112,4 @@ $(function () {
 setInterval(function() {
 	console.log(getDate() + ": Timer fired");
 	requestUpdate()
-}, 30000);
+}, 60000);

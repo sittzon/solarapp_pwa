@@ -6,6 +6,7 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const open = require('open');
 const fs = require('fs');
+const request = require('request-json');
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -45,8 +46,6 @@ io.on('connection', (socket) => {
         powerNow = powerNow/10
         unit = "kW"
       }
-      //console.log(getDate() + ": Last update on server: " +lastUpdate);
-      //console.log("Status: "+status + "\n")
       io.emit('updateFromServer', powerNow, unit, lastUpdate, status);
     })
 
@@ -63,6 +62,16 @@ io.on('connection', (socket) => {
       }
       io.emit('updateChartFromServer', x, y);
     })
+    var smhi = request.createClient('http://opendata-download-metfcst.smhi.se/');
+    smhi.get('api/category/pmp3g/version/2/geotype/point/lon/16.349/lat/56.678/data.json',function(err, res, body) {
+      if (err) {return console.log(err)}
+      
+      //Find Temperature object
+      const key = Object.keys(body.timeSeries[0].parameters).find(user => body.timeSeries[0].parameters[user].name === 't')
+      const temp = body.timeSeries[0].parameters[key].values[0] + "°C";
+      //console.log(temp)
+      io.emit('updateTempFromServer', temp);
+    });
   })
 })
   
