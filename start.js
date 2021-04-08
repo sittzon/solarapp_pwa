@@ -6,7 +6,7 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const open = require('open');
 const fs = require('fs');
-const request = require('request-json');
+const request = require('request');
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -18,6 +18,8 @@ app.use('/favicons', express.static('favicons'));
 app.use('/body-scroll-lock', express.static('node_modules/body-scroll-lock/lib'));
 app.use('/chartjs', express.static('node_modules/chart.js'));
 
+var backend_url = "https://api:443/"
+
 function getDate() {
   var d = new Date();
   d = d.getFullYear() + "-" + ('0' + (d.getMonth() + 1)).slice(-2) + "-" + ('0' + d.getDate()).slice(-2) + " " + ('0' + d.getHours()).slice(-2) + ":" + ('0' + d.getMinutes()).slice(-2) + ":" + ('0' + d.getSeconds()).slice(-2);
@@ -27,18 +29,20 @@ function getDate() {
 io.on('connection', (socket) => {
   socket.on('requestUpdate', (socket) => {
     console.log(getDate() + ": Received request for update from client")
-    //Check latest update on server
-    powerNow = 0;
-    lastUpdate = "";
-    unit = "W"
-    fs.readFile('/Users/Mac/energy_now.txt', 'utf8', function (err,data) {
-      if (err) {
-        return console.log(err);
-      }
-      splitString = data.split('\n')
-      lastUpdate = splitString[0]
-      powerNow = Number(splitString[1])
-      status = Number(splitString[2])
+    request.get({url:backend_url+"Status",rejectUnauthorized: false},function(err, res, body) {
+      if (err) {return console.log(err)}
+      var jsonData = JSON.parse(body);
+      status = jsonData.status;
+      //console.log(status);
+      io.emit('updateStatus', status);
+    });
+    request.get({url:backend_url+"EnergyNow",rejectUnauthorized: false},function(err, res, body) {
+      if (err) {return console.log(err)}
+      var jsonData = JSON.parse(body);
+      //console.log(jsonData)
+      lastUpdate = jsonData.date;
+      powerNow = jsonData.energy;
+      unit = jsonData.unit;
       if (powerNow > 1000){
         //Round with one decimal
         powerNow = powerNow/100
@@ -46,31 +50,27 @@ io.on('connection', (socket) => {
         powerNow = powerNow/10
         unit = "kW"
       }
-      io.emit('updateFromServer', powerNow, unit, lastUpdate, status);
-    })
-
-    fs.readFile('/Users/Mac/energy_over_day.txt', 'utf8', function (err,data) {
-      if (err) {
-        return console.log(err);
-      }
-      var jsonData = JSON.parse(data);
+      io.emit('updateFromServer', powerNow, unit, lastUpdate);
+    });
+    request.get({url:backend_url+"Timeline",rejectUnauthorized: false},function(err, res, body) {
+      if (err) {return console.log(err)}
+      var jsonData = JSON.parse(body);
       var x = [1000];
       var y = [1000];
       for (i = 0; i < jsonData.length; i++) {
-        x[i] = jsonData[i].ts.substring(11).substring(0,5); //Time
-        y[i] = jsonData[i].val*1000; //Power
+        x[i] = jsonData[i].timeStamp.substring(11).substring(0,5) //Time
+        y[i] = jsonData[i].value*1000; //Power
       }
-      io.emit('updateChartFromServer', x, y);
-    })
-    var smhi = request.createClient('http://opendata-download-metfcst.smhi.se/');
-    smhi.get('api/category/pmp3g/version/2/geotype/point/lon/16.349/lat/56.678/data.json',function(err, res, body) {
+      io.emit('updateChart', x, y);
+    });
+    request.get({url: 'http://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/16.349/lat/56.678/data.json'},function(err, res, body) {
       if (err) {return console.log(err)}
-      
       //Find Temperature object
-      const key = Object.keys(body.timeSeries[0].parameters).find(user => body.timeSeries[0].parameters[user].name === 't')
-      const temp = body.timeSeries[0].parameters[key].values[0] + "°C";
+      var jsonData = JSON.parse(body);
+      const key = Object.keys(jsonData.timeSeries[0].parameters).find(user => jsonData.timeSeries[0].parameters[user].name === 't')
+      const temp = jsonData.timeSeries[0].parameters[key].values[0] + "°C";
       //console.log(temp)
-      io.emit('updateTempFromServer', temp);
+      io.emit('updateTemp', temp);
     });
   })
 })

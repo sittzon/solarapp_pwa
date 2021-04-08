@@ -1,0 +1,3 @@
+[submodule "shinemonitor_api"]
+	path = shinemonitor_api
+	url = git@github.com:sittzon/shinemonitor_api.git

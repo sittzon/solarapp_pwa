@@ -5,7 +5,7 @@ function getDate() {
 }
 
 document.addEventListener('visibilitychange', () => {
-  console.log(document.visibilityState);
+  //console.log(document.visibilityState);
   if (document.visibilityState == 'visible') {
   	requestUpdate();
   }
@@ -41,19 +41,6 @@ function generateSolarChart(x, y) {
 	});
 }
 
-/*
-function getElementsStartsWithId( id ) {
-	var children = document.body.getElementsByTagName('*');
-	var elements = [], child;
-	for (var i = 0, length = children.length; i < length; i++) {
-		child = children[i];
-		if (child.id.substr(0, id.length) == id) {
-			elements.push(child);
-		}
-	}
-	return elements;
-}
-*/
 // socket.io request update from server
 function requestUpdate() {
 	console.log(getDate() + ": Requesting update from server");
@@ -74,42 +61,40 @@ function updateTextWithAnimation(elName, newText) {
 
 $(function () {
 	var socket = io();
-	socket.on('updateFromServer', function(powerNow,unit,lastUpdate,status,temp) {
+	socket.on('updateFromServer', function(powerNow,unit,lastUpdate) {
 		console.log(powerNow + " " + unit);
 		console.log(lastUpdate);
+	    updateTextWithAnimation("powerNowAndUnit", powerNow+" "+unit);
+	    updateTextWithAnimation("lastUpdate", "Latest update: "+lastUpdate);
+	});
+	socket.on('updateStatus', function(status) {
 		console.log("Status: "+status);
-
-    if (status == 0) {
-    	status = "Online";
+	    if (status == "Online") {
 			$('#status').removeClass('text-warning');
 			$('#status').addClass('text-success');
-    } else {
-    	status = "Offline"
-    	powerNow = 0;
+	    } else {
+	    	powerNow = 0;
 			$('#status').removeClass('text-success');
 			$('#status').addClass('text-warning');
-    }
-
-    updateTextWithAnimation("powerNowAndUnit", powerNow+" "+unit);
-    updateTextWithAnimation("lastUpdate", "Latest update: "+lastUpdate);
-    updateTextWithAnimation("status", status);
+	    }
+	    updateTextWithAnimation("status", status);
 	});
-	socket.on('updateTempFromServer', function(temp) {
+	socket.on('updateTemp', function(temp) {
 		console.log("Temperature: "+temp);
 		updateTextWithAnimation("temperature", temp);
 		$('#loadingSpinner').css("visibility", "hidden");
-	})
-	socket.on('updateChartFromServer', function(xData, yData) {
+	});
+	socket.on('updateChart', function(xData, yData) {
 		generateSolarChart(xData, yData);
-	})
+	});
 	socket.on('connect', () => {
 		console.log(getDate() + ": Connected");
 		requestUpdate();
-	})
+	});
 });
 
 //Request update every minute
 setInterval(function() {
 	console.log(getDate() + ": Timer fired");
 	requestUpdate()
-}, 60000);
+}, 180000);

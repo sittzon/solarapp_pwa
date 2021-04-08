@@ -1,0 +1,30 @@
+version: '3.7'
+
+services:
+  app:
+    image: solarapp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8181:8181
+    container_name: solarapp
+
+  api:
+    image: shinemonitorapi
+    build:
+      context: shinemonitor_api/.
+      dockerfile: Dockerfile
+    ports:
+      - 8000:80
+      - 8001:443
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+;http://+
+      - ASPNETCORE_HTTPS_PORT=8001
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=password
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+    volumes:
+      #macOS or Linux; Use %USERPROFILE% instead of {HOME} on Windows
+      - ${HOME}/.aspnet/https:/https/
+    container_name: solarapp_api

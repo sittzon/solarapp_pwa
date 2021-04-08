@@ -3,7 +3,8 @@
     "create-pwa": "^2.3.1"
   },
   "scripts": {
-    "pwa": "create-pwa --icon=\"icon.png\" --launch=\"icon.png\""
+    "pwa": "create-pwa --icon=\"icon.png\" --launch=\"icon.png\"",
+    "start": "node start.js"
   },
   "dependencies": {
     "body-scroll-lock": "^3.1.5",
@@ -11,6 +12,7 @@
     "express": "^4.17.1",
     "open": "^8.0.2",
     "pug": "^3.0.2",
+    "request": "^2.88.2",
     "request-json": "^0.6.5",
     "socket.io": "^3.1.2"
   }
