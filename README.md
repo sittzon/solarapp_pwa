@@ -1,7 +1,7 @@
 # solarapp_pwa
 Show solar usage and home power usage in a PWA using Shinemonitor API (https://github.com/sittzon/shinemonitor_api).
 
-#Usage
+# Usage
 First, configure the backend according to Readme in Shinemonitor API (https://github.com/sittzon/shinemonitor_api).
 
 Then, build application for docker using ```docker-compose build```. Run the docker images in detached mode using ```docker-compose up -d```. The app is now reachable at http://localhost:8181, and the Swagger backend at https://localhost:8001/index.html.
