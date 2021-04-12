@@ -6,6 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    restart: always
     ports:
       - 8181:8181
     container_name: solarapp
@@ -15,6 +16,7 @@ services:
     build:
       context: shinemonitor_api/.
       dockerfile: Dockerfile
+    restart: always
     ports:
       - 8000:80
       - 8001:443
