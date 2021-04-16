@@ -7,6 +7,7 @@ const io = require('socket.io')(http);
 const open = require('open');
 const fs = require('fs');
 const request = require('request');
+const API_URL = process.env.API_URL || "https://api:443/"
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -18,7 +19,6 @@ app.use('/favicons', express.static('favicons'));
 app.use('/body-scroll-lock', express.static('node_modules/body-scroll-lock/lib'));
 app.use('/chartjs', express.static('node_modules/chart.js'));
 
-var backend_url = "https://api:443/"
 
 function getDate() {
   var d = new Date();
@@ -29,14 +29,14 @@ function getDate() {
 io.on('connection', (socket) => {
   socket.on('requestUpdate', (socket) => {
     console.log(getDate() + ": Received request for update from client")
-    request.get({url:backend_url+"Status",rejectUnauthorized: false},function(err, res, body) {
+    request.get({url:`${API_URL}`+"Status",rejectUnauthorized: false},function(err, res, body) {
       if (err) {return console.log(err)}
       var jsonData = JSON.parse(body);
       status = jsonData.status;
       //console.log(status);
       io.emit('updateStatus', status);
     });
-    request.get({url:backend_url+"EnergyNow",rejectUnauthorized: false},function(err, res, body) {
+    request.get({url:`${API_URL}`+"EnergyNow",rejectUnauthorized: false},function(err, res, body) {
       if (err) {return console.log(err)}
       var jsonData = JSON.parse(body);
       //console.log(jsonData)
@@ -52,7 +52,18 @@ io.on('connection', (socket) => {
       }
       io.emit('updateFromServer', powerNow, unit, lastUpdate);
     });
-    request.get({url:backend_url+"Timeline",rejectUnauthorized: false},function(err, res, body) {
+    request.get({url:`${API_URL}`+"EnergySummary",rejectUnauthorized: false},function(err, res, body) {
+      if (err) {return console.log(err)}
+      var jsonData = JSON.parse(body);
+      console.log(jsonData)
+      today = jsonData.today;
+      month = jsonData.month;
+      year = jsonData.year;
+      total = jsonData.total;
+      unit = jsonData.unit;
+      io.emit('updateSummary', today, month, year, total, unit);
+    });
+    request.get({url:`${API_URL}`+"Timeline",rejectUnauthorized: false},function(err, res, body) {
       if (err) {return console.log(err)}
       var jsonData = JSON.parse(body);
       var x = [1000];
@@ -74,7 +85,7 @@ io.on('connection', (socket) => {
     });
   })
 })
-  
+
 const server = http.listen(8181, () => {
   console.log(`Express is running on port ${server.address().port}`);
 });

@@ -5,7 +5,7 @@ function getDate() {
 }
 
 document.addEventListener('visibilitychange', () => {
-  //console.log(document.visibilityState);
+  console.log(document.visibilityState);
   if (document.visibilityState == 'visible') {
   	requestUpdate();
   }
@@ -82,10 +82,22 @@ $(function () {
 	socket.on('updateTemp', function(temp) {
 		console.log("Temperature: "+temp);
 		updateTextWithAnimation("temperature", temp);
-		$('#loadingSpinner').css("visibility", "hidden");
+	});
+	socket.on('updateSummary', function(today, month, year, total, unit) {
+		console.log("Today: "+today);
+		console.log("Month: "+month);
+		console.log("Year: "+year);
+		console.log("Total: "+total);
+		var t = "Today: "+today+" "+unit+"\n"+
+			"Month: "+month+" "+unit+"\n"+
+			"Year: "+year+" "+unit+"\n"+
+			"Total: "+total+" "+unit;
+		updateTextWithAnimation("summary", t);
+
 	});
 	socket.on('updateChart', function(xData, yData) {
 		generateSolarChart(xData, yData);
+		$('#loadingSpinner').css("visibility", "hidden");
 	});
 	socket.on('connect', () => {
 		console.log(getDate() + ": Connected");
@@ -93,7 +105,7 @@ $(function () {
 	});
 });
 
-//Request update every minute
+//Request update according to interval
 setInterval(function() {
 	console.log(getDate() + ": Timer fired");
 	requestUpdate()
