@@ -1,10 +1,12 @@
 {
   "devDependencies": {
-    "create-pwa": "^2.3.1"
+    "create-pwa": "^2.3.1",
+    "mocha": "^8.3.2"
   },
   "scripts": {
     "pwa": "create-pwa --icon=\"icon.png\" --launch=\"icon.png\"",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "mocha"
   },
   "dependencies": {
     "body-scroll-lock": "^3.1.5",

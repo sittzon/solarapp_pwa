@@ -61,7 +61,7 @@ function updateTextWithAnimation(elName, newText) {
 
 $(function () {
 	var socket = io();
-	socket.on('updateFromServer', function(powerNow,unit,lastUpdate) {
+	socket.on('updateEnergyNow', function(powerNow,unit,lastUpdate) {
 		console.log(powerNow + " " + unit);
 		console.log(lastUpdate);
 	    updateTextWithAnimation("powerNowAndUnit", powerNow+" "+unit);
@@ -97,6 +97,9 @@ $(function () {
 	});
 	socket.on('updateChart', function(xData, yData) {
 		generateSolarChart(xData, yData);
+	});
+	socket.on('updateDone', function() {
+		console.log('Update done');
 		$('#loadingSpinner').css("visibility", "hidden");
 	});
 	socket.on('connect', () => {
