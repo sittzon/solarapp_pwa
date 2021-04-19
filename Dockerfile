@@ -13,8 +13,7 @@ COPY views/ ./views
 COPY icons/ ./icons
 COPY favicons/ ./favicons
 COPY launch-screens/ ./launch-screens
-COPY manifest.json .
-COPY start.js .
+COPY server.js .
 COPY config.xml .
 
 EXPOSE 8181
