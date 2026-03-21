@@ -1,21 +1,24 @@
-FROM node
+# Build stage
+FROM node:20-alpine AS builder
 
-RUN apt-get update
+ARG VITE_API_URL=http://api:8000/
 
-RUN mkdir -p /src
-WORKDIR /src
-COPY package.json .
-RUN npm install
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
 
-COPY public/ ./public
-COPY routes/ ./routes
-COPY views/ ./views
-COPY icons/ ./icons
-COPY favicons/ ./favicons
-COPY launch-screens/ ./launch-screens
-COPY server.js .
-COPY config.xml .
+# Create .env file with the API URL
+RUN echo "VITE_API_URL=${VITE_API_URL}" > .env
 
-EXPOSE 8181
+RUN npm run build
 
-ENTRYPOINT ["npm", "start"]
+# Production stage
+FROM nginx:alpine
+
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

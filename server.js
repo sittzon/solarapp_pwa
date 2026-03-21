@@ -7,7 +7,7 @@ const io = require('socket.io')(http);
 const open = require('open');
 const fs = require('fs');
 const request = require('request');
-const API_URL = process.env.API_URL || "https://api:443/"
+const API_URL = process.env.API_URL || "http://api:443/"
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
