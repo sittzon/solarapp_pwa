@@ -1,10 +1,15 @@
 <script>
   import { onMount } from 'svelte';
-  import Chart from 'chart.js/dist/Chart.js';
+  import Card from './lib/Card.svelte';
+  import Chart from './lib/Chart.svelte';
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/";
+  const API_URL = import.meta.env.VITE_API_URL || "/api/";
 
-  let loading = $state(true);
+  let loadingStatus = $state(true);
+  let loadingNow = $state(true);
+  let loadingSummary = $state(true);
+  let loadingTimeline = $state(true);
+  let loadingTemp = $state(true);
   let lastUpdate = $state('');
   let status = $state('');
   let powerNow = $state(0);
@@ -14,86 +19,110 @@
   let month = $state(0);
   let year = $state(0);
   let total = $state(0);
-  let totalUnit = $state('');
+  let totalUnit = $state('kWh');
   let timelineData = $state({ x: [], y: [] });
 
-  let chartCanvas;
-  let chart;
-
   async function fetchStatus() {
+    loadingStatus = true;
     try {
       const res = await fetch(`${API_URL}status`);
       const json = await res.json();
       status = json.Status;
     } catch (e) {
       console.error('Status error:', e);
+    } finally {
+      loadingStatus = false;
     }
   }
 
   async function fetchEnergyNow() {
+    loadingNow = true;
     try {
       const res = await fetch(`${API_URL}now`);
       const json = await res.json();
-      lastUpdate = new Date(json.TimeStamp).toLocaleString();
+      lastUpdate = new Date().toLocaleTimeString();
       let power = json.Energy;
-      const unit = json.Unit;
       if (power > 1000) {
-        power = power / 100;
-        power = Math.round(power) / 10;
+        power = power / 1000;
+        power = Math.round(power * 10) / 10;
         powerUnit = 'kW';
       } else {
-        powerUnit = unit;
+        powerUnit = 'W';
       }
       powerNow = power;
     } catch (e) {
       console.error('EnergyNow error:', e);
+    } finally {
+      loadingNow = false;
     }
   }
 
   async function fetchEnergySummary() {
+    loadingSummary = true;
     try {
       const res = await fetch(`${API_URL}summary`);
       const json = await res.json();
-      today = json.Today;
-      month = json.Month;
-      year = json.Year;
+      today = Math.round(json.Today * 10) / 10;
+      month = Math.round(json.Month * 10) / 10;
+      year = Math.round(json.Year * 10) / 10;
       total = Math.round(json.Total * 10) / 10;
       totalUnit = json.Unit;
     } catch (e) {
       console.error('EnergySummary error:', e);
+    } finally {
+      loadingSummary = false;
     }
   }
 
   async function fetchTimeline() {
+    loadingTimeline = true;
     try {
       const res = await fetch(`${API_URL}timeline`);
       const json = await res.json();
+      const hourlyData = {};
+      for (let i = 0; i < json.length; i++) {
+        const hour = json[i].TimeStamp.substring(11, 13);
+        const value = json[i].Value * 1000;
+        if (!hourlyData[hour]) {
+          hourlyData[hour] = { sum: 0, count: 0 };
+        }
+        hourlyData[hour].sum += value;
+        hourlyData[hour].count += 1;
+      }
       const x = [];
       const y = [];
-      for (let i = 0; i < json.length; i++) {
-        x.push(json[i].TimeStamp.substring(11, 16));
-        y.push(json[i].Value * 1000);
+      for (let h = 0; h < 24; h++) {
+        const hour = h.toString().padStart(2, '0');
+        x.push(`${hour}:00`);
+        if (hourlyData[hour] && hourlyData[hour].count > 0) {
+          y.push(Math.round(hourlyData[hour].sum / hourlyData[hour].count));
+        } else {
+          y.push(0);
+        }
       }
       timelineData = { x, y };
-      updateChart();
     } catch (e) {
       console.error('Timeline error:', e);
+    } finally {
+      loadingTimeline = false;
     }
   }
 
   async function fetchSmhiData() {
+    loadingTemp = true;
     try {
-      const res = await fetch('http://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/16.349/lat/56.678/data.json');
+      const res = await fetch('https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/16.349/lat/56.678/data.json');
       const json = await res.json();
       const key = Object.keys(json.timeSeries[0].parameters).find(k => json.timeSeries[0].parameters[k].name === 't');
-      temperature = json.timeSeries[0].parameters[key].values[0] + '°C';
+      temperature = json.timeSeries[0].parameters[key].values[0];
     } catch (e) {
       console.error('SMHI error:', e);
+    } finally {
+      loadingTemp = false;
     }
   }
 
   async function fetchAllData() {
-    loading = true;
     await Promise.all([
       fetchStatus(),
       fetchEnergyNow(),
@@ -101,39 +130,10 @@
       fetchTimeline(),
       fetchSmhiData()
     ]);
-    loading = false;
   }
 
-  function updateChart() {
-    if (chart) {
-      chart.data.labels = timelineData.x;
-      chart.data.datasets[0].data = timelineData.y;
-      chart.update();
-    } else if (chartCanvas && timelineData.x.length > 0) {
-      chart = new Chart(chartCanvas, {
-        type: 'line',
-        data: {
-          labels: timelineData.x,
-          datasets: [{
-            label: 'Power (W)',
-            data: timelineData.y,
-            borderColor: 'orange',
-            backgroundColor: 'rgba(255, 165, 0, 0.2)',
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            x: { ticks: { color: 'white' } },
-            y: { ticks: { color: 'white' } }
-          },
-          plugins: {
-            legend: { labels: { color: 'white' } }
-          }
-        }
-      });
-    }
+  function getMaxPower() {
+    return Math.max(...timelineData.y, 1);
   }
 
   onMount(() => {
@@ -143,49 +143,120 @@
   });
 </script>
 
-<div class="h-100 text-light container-fluid" style="background: black;">
-  <h3 class="text-center display-8">Solar App</h3>
-  
-  {#if loading}
-    <div class="d-flex justify-content-center">
-      <div class="spinner-border ml-auto"></div>
-    </div>
-  {/if}
+<div class="app">
+  <header>
+    <h1>Solar Dashboard</h1>
+  </header>
 
-  <div class="container text-center">
-    <p>{lastUpdate}</p>
-    
-    <div class="col">
-      <div class="row"></div>
-      <div class="row">
-        <div class="col"></div>
-        <div class="col">
-          <div class="row">
-            <div class="col">
-              <p>{status}</p>
-            </div>
-          </div>
-          <img src="/solar_blue_icon.png" class="rounded-circle border border-warning rounded-sm mx-auto d-block img-fluid" alt="Solar" />
+  <div class="grid">
+    <Card loading={loadingStatus} title="Status">
+      <div class="value" class:green={status === 'Online'} class:red={status === 'Offline'}>{status || 'Unknown'}</div>
+    </Card>
 
-          <div class="row mt-3">
-            <div class="col">
-              <p>{powerNow} {powerUnit}</p>
-            </div>
-            <div class="col">
-              <p>{temperature}</p>
-            </div>
-          </div>
-        </div>
-        <div class="col"></div>
+    <Card loading={loadingNow} title="Current Production">
+      <div class="value green">{powerNow}
+        <span class="unit">{powerUnit}</span>
       </div>
-    </div>
+    </Card>
 
-    <div class="row mt-3">
-      <canvas bind:this={chartCanvas} width="200" height="100"></canvas>
-    </div>
+    <Card loading={loadingSummary} title="Today's Production">
+      <div class="value green">{today}
+        <span class="unit">{totalUnit}</span>
+      </div>
+    </Card>
 
-    <div class="row mt-3">
-      <p>Today: {today} | Month: {month} | Year: {year} | Total: {total} {totalUnit}</p>
-    </div>
+    <Card loading={loadingTemp} title="Temperature">
+      <div class="value blue">{temperature}
+        <span class="unit">°C</span>
+      </div>
+    </Card>
+
+    <Card span={2} loading={loadingTimeline} title="Production (Last 24 Hours)" subtitle="Peak: {(getMaxPower() / 1000).toFixed(2)} kW">
+      <Chart data={timelineData.y} maxValue={getMaxPower()} />
+    </Card>
+
+    <Card loading={loadingSummary} title="This Month">
+      <div class="value green">{month}
+        <span class="unit">{totalUnit}</span>
+      </div>
+    </Card>
+
+    <Card loading={loadingSummary} title="This Year">
+      <div class="value green">{year}
+        <span class="unit">{totalUnit}</span>
+      </div>
+    </Card>
+
+    <Card loading={loadingSummary} title="Total Lifetime">
+      <div class="value green">{(total / 1000).toFixed(2)}
+        <span class="unit">MWh</span>
+      </div>
+    </Card>
   </div>
+
+  <footer>
+    Updated at {lastUpdate}
+  </footer>
 </div>
+
+<style>
+  :global(*) {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  :global(body) {
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+
+  .app {
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 20px;
+  }
+
+  header h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    text-align: center;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+  }
+
+  .value {
+    font-size: 2rem;
+    font-weight: 600;
+  }
+
+  .unit
+  {
+    font-size: 1.5rem;
+    font-weight: 100;
+    color: #94a3b8;
+  }
+
+  .green { color: #22c55e; }
+  .yellow { color: #facc15; }
+  .blue { color: #38bdf8; }
+  .red { color: #ef4444; }
+
+  footer {
+    margin-top: 30px;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+</style>

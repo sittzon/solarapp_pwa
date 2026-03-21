@@ -21,4 +21,4 @@ services:
     container_name: solarapp_api
     volumes:
       - ./shinemonitor_api/token:/app/token
-      - ./shinemonitor_api/config.py:/app/src/config.py:ro
+      - ./shinemonitor_api/src/config.py:/app/src/config.py:ro
