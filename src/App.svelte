@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import Card from './lib/Card.svelte';
   import Chart from './lib/Chart.svelte';
+  import './lib/theme.css';
 
   const API_URL = import.meta.env.VITE_API_URL || "/api/";
 
@@ -79,25 +80,32 @@
     try {
       const res = await fetch(`${API_URL}timeline`);
       const json = await res.json();
-      const hourlyData = {};
+      const intervalData = {};
       for (let i = 0; i < json.length; i++) {
-        const hour = json[i].TimeStamp.substring(11, 13);
+        const timestamp = json[i].TimeStamp;
+        const hour = timestamp.substring(11, 13);
+        const minute = timestamp.substring(14, 16);
+        const interval = `${hour}:${minute}`;
         const value = json[i].Value * 1000;
-        if (!hourlyData[hour]) {
-          hourlyData[hour] = { sum: 0, count: 0 };
+        if (!intervalData[interval]) {
+          intervalData[interval] = { sum: 0, count: 0 };
         }
-        hourlyData[hour].sum += value;
-        hourlyData[hour].count += 1;
+        intervalData[interval].sum += value;
+        intervalData[interval].count += 1;
       }
       const x = [];
       const y = [];
       for (let h = 0; h < 24; h++) {
-        const hour = h.toString().padStart(2, '0');
-        x.push(`${hour}:00`);
-        if (hourlyData[hour] && hourlyData[hour].count > 0) {
-          y.push(Math.round(hourlyData[hour].sum / hourlyData[hour].count));
-        } else {
-          y.push(0);
+        for (let m = 0; m < 60; m += 5) {
+          const hour = h.toString().padStart(2, '0');
+          const minute = m.toString().padStart(2, '0');
+          const interval = `${hour}:${minute}`;
+          x.push(`${hour}:${minute}`);
+          if (intervalData[interval] && intervalData[interval].count > 0) {
+            y.push(Math.round(intervalData[interval].sum / intervalData[interval].count));
+          } else {
+            y.push(0);
+          }
         }
       }
       timelineData = { x, y };
@@ -144,9 +152,6 @@
 </script>
 
 <div class="app">
-  <header>
-    <h1>Solar Dashboard</h1>
-  </header>
 
   <div class="grid">
     <Card loading={loadingStatus} title="Status">
@@ -172,7 +177,7 @@
     </Card>
 
     <Card span={2} loading={loadingTimeline} title="Production (Last 24 Hours)" subtitle="Peak: {(getMaxPower() / 1000).toFixed(2)} kW">
-      <Chart data={timelineData.y} maxValue={getMaxPower()} />
+      <Chart data={timelineData.y} labels={timelineData.x} maxValue={getMaxPower()} />
     </Card>
 
     <Card loading={loadingSummary} title="This Month">
@@ -208,8 +213,8 @@
   }
 
   :global(body) {
-    background: #0f172a;
-    color: #e2e8f0;
+    background: var(--color-bg);
+    color: var(--color-text);
     min-height: 100vh;
   }
 
@@ -226,7 +231,7 @@
   header h1 {
     font-size: 1.8rem;
     font-weight: 600;
-    color: #e2e8f0;
+    color: var(--color-text);
     text-align: center;
   }
 
@@ -245,17 +250,17 @@
   {
     font-size: 1.5rem;
     font-weight: 100;
-    color: #94a3b8;
+    color: var(--color-text-muted);
   }
 
-  .green { color: #22c55e; }
-  .yellow { color: #facc15; }
-  .blue { color: #38bdf8; }
-  .red { color: #ef4444; }
+  .green { color: var(--color-green); }
+  .yellow { color: var(--color-yellow); }
+  .blue { color: var(--color-blue); }
+  .red { color: var(--color-red); }
 
   footer {
     margin-top: 30px;
-    color: #94a3b8;
+    color: var(--color-text-muted);
     font-size: 0.8rem;
     text-align: center;
   }

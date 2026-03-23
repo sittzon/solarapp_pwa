@@ -24,7 +24,7 @@
 
 <style>
   .card {
-    background: #1e293b;
+    background: var(--color-surface);
     padding: 20px;
     border-radius: 16px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.3);
@@ -57,8 +57,8 @@
   .spinner {
     width: 24px;
     height: 24px;
-    border: 2px solid #334155;
-    border-top-color: #22c55e;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-green);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -69,7 +69,7 @@
 
   .label {
     font-size: 0.9rem;
-    color: #94a3b8;
+    color: var(--color-text-muted);
   }
 
   .header {
@@ -81,7 +81,7 @@
 
   .subtitle {
     font-size: 0.85rem;
-    color: #22c55e;
+    color: var(--color-yellow);
     font-weight: 500;
   }
 </style>
